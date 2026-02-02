@@ -1,4 +1,3 @@
-import { useState, useMemo } from "react";
 // ─── CONSTANTS ───────────────────────────────────────────────
 const TIER_COLORS = [
   { bg: "#1a1a2e", accent: "#e8a838", light: "#fef3d0" },
@@ -428,7 +427,7 @@ function MemberView({ tiers, totals }) {
   );
 }
 // ─── MAIN APP ────────────────────────────────────────────────
-export default function App() {
+function App() {
   const [goal, setGoal]             = useState(270000);
   const [activeTab, setActiveTab]   = useState("membership");
   const [tiers, setTiers]           = useState(defaultTiers);
