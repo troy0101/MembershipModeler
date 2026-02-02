@@ -107,6 +107,29 @@ CENTURY_REVENUE = 82       // What club keeps
 - Real-time calculations with useMemo
 - No external dependencies beyond React
 
+## Deployment
+
+This application is set up for automatic deployment to GitHub Pages.
+
+### GitHub Pages Setup
+
+1. **Enable GitHub Pages** in your repository settings:
+   - Go to Settings → Pages
+   - Under "Source", select "GitHub Actions"
+
+2. **Automatic Deployment**:
+   - The workflow will automatically deploy when you push to the `main` branch
+   - You can also manually trigger deployment from the Actions tab
+   - Your site will be available at: `https://troy0101.github.io/MembershipModeler/`
+
+3. **Manual Build**:
+   ```bash
+   npm install
+   npm run build
+   ```
+
+The build process creates an optimized production bundle in the `build/` directory.
+
 ## License
 
 MIT License - Feel free to use and modify for your organization.
