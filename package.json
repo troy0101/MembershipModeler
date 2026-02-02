@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Interactive React application for managing social club membership tiers, budget planning, and fundraisers",
   "homepage": "https://troy0101.github.io/MembershipModeler",
-  "main": "membership_model.jsx",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
