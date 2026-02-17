@@ -1,3 +1,4 @@
+import { useState, useMemo } from "react";
 // ─── CONSTANTS ───────────────────────────────────────────────
 const TIER_COLORS = [
   { bg: "#1a1a2e", accent: "#e8a838", light: "#fef3d0" },
@@ -56,6 +57,11 @@ const defaultBudget = [
 const defaultFundraisers = [
   { id: 1, name: "Eagles Blocks",   cost: 10,  profit: 300,  estSold: 1  },
   { id: 2, name: "King of Hearts",  cost: 0,   profit: 30000,estSold: 1  },
+];
+
+// Individual members who exceed tier minimums
+const defaultMembers = [
+  // Example: { id: 1, tierId: 1, name: "John Smith", ticketsPerMonth: 10, centuries: 15 }
 ];
 const fmt = (n) => "$" + Math.round(n).toLocaleString();
 function calcTier(t) {
@@ -427,12 +433,13 @@ function MemberView({ tiers, totals }) {
   );
 }
 // ─── MAIN APP ────────────────────────────────────────────────
-function App() {
+export default function App() {
   const [goal, setGoal]             = useState(270000);
   const [activeTab, setActiveTab]   = useState("membership");
   const [tiers, setTiers]           = useState(defaultTiers);
   const [budget, setBudget]         = useState(defaultBudget);
   const [fundraisers, setFundraisers] = useState(defaultFundraisers);
+  const [members, setMembers]       = useState(defaultMembers);
   // ── tier CRUD ──
   const nextTierId  = Math.max(...tiers.map((t) => t.id), 0) + 1;
   const updateTier  = (id, updated) => setTiers((prev) => prev.map((t) => (t.id === id ? updated : t)));
@@ -455,14 +462,35 @@ function App() {
   const updateFundraiser = (id, updated) => setFundraisers((prev) => prev.map((f) => (f.id === id ? updated : f)));
   const removeFundraiser = (id) => setFundraisers((prev) => prev.filter((f) => f.id !== id));
   const addFundraiser    = () => setFundraisers((prev) => [...prev, { id: nextFundId, name: "New Fundraiser", cost: 10, profit: 100, estSold: 1 }]);
+
+  // ── member CRUD ──
+  const nextMemberId  = Math.max(...members.map((m) => m.id), 0) + 1;
+  const updateMember  = (id, updated) => setMembers((prev) => prev.map((m) => (m.id === id ? updated : m)));
+  const removeMember  = (id) => setMembers((prev) => prev.filter((m) => m.id !== id));
+  const addMember     = (tierId) => setMembers((prev) => [...prev, { id: nextMemberId, tierId, name: "New Member", ticketsPerMonth: 0, centuries: 0 }]);
   // ── totals ──
   const totals = useMemo(() => {
     const membershipTotal  = tiers.reduce((sum, t) => sum + calcTier(t).total, 0);
+    
+    // Add individual member overages (only the excess beyond tier minimums)
+    const memberOverages = members.reduce((sum, m) => {
+      const tier = tiers.find(t => t.id === m.tierId);
+      if (!tier) return sum;
+      
+      const tierTickets   = tier.hasTickets   ? tier.ticketsPerMonth : 0;
+      const tierCenturies = tier.hasCenturies ? tier.centuries : 0;
+      
+      const extraTickets   = Math.max(0, m.ticketsPerMonth - tierTickets) * TICKET_REVENUE * 12;
+      const extraCenturies = Math.max(0, m.centuries - tierCenturies) * CENTURY_REVENUE;
+      
+      return sum + extraTickets + extraCenturies;
+    }, 0);
+    
     const budgetTotal      = budget.reduce((sum, s) => sum + s.items.reduce((ss, i) => ss + i.qty * i.unit, 0), 0);
     const fundraiserProfit = fundraisers.reduce((sum, f) => sum + f.profit * f.estSold, 0);
-    const totalIncome      = membershipTotal + fundraiserProfit;
-    return { membershipTotal, budgetTotal, fundraiserProfit, totalIncome, net: totalIncome - budgetTotal };
-  }, [tiers, budget, fundraisers]);
+    const totalIncome      = membershipTotal + memberOverages + fundraiserProfit;
+    return { membershipTotal, memberOverages, budgetTotal, fundraiserProfit, totalIncome, net: totalIncome - budgetTotal };
+  }, [tiers, members, budget, fundraisers]);
   const surplus  = totals.net - goal;
   const onTarget = totals.totalIncome >= goal;
   const pct      = goal > 0 ? Math.min((totals.totalIncome / goal) * 100, 100) : 100;
@@ -470,6 +498,7 @@ function App() {
     { id: "membership",  label: "Membership"  },
     { id: "budget",      label: "Budget"      },
     { id: "fundraisers", label: "Fundraisers" },
+    { id: "members",     label: "Members"     },
     { id: "member",      label: "Member View" },
   ];
   // ── fundraiser color palette (green family) ──
@@ -521,6 +550,12 @@ function App() {
                 <div style={{ fontSize: 9.5, color: "#999", textTransform: "uppercase", letterSpacing: 0.8 }}>Membership</div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: "#1a1a2e" }}>{fmt(totals.membershipTotal)}</div>
               </div>
+              {totals.memberOverages > 0 && (
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 9.5, color: "#999", textTransform: "uppercase", letterSpacing: 0.8 }}>+ Overages</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#5ba3d9" }}>{fmt(totals.memberOverages)}</div>
+                </div>
+              )}
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 9.5, color: "#999", textTransform: "uppercase", letterSpacing: 0.8 }}>Fundraisers</div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: FUND_BG }}>{fmt(totals.fundraiserProfit)}</div>
@@ -762,6 +797,141 @@ function App() {
             </div>
           </>
         )}
+        {/* ══════════ MEMBERS TAB ══════════ */}
+        {activeTab === "members" && (
+          <>
+            {/* Summary by tier */}
+            <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e4e4e4", overflow: "hidden", marginBottom: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ background: "#f8f8f8" }}>
+                    {["Tier", "Individual Members", "Extra Revenue"].map((h, i) => (
+                      <th key={h} style={{ padding: "9px 12px", fontSize: 10, letterSpacing: 1, textTransform: "uppercase", color: "#999", fontWeight: 600, textAlign: i === 0 ? "left" : "right", borderBottom: "1px solid #eee" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {tiers.map((tier, idx) => {
+                    const tierMembers = members.filter(m => m.tierId === tier.id);
+                    const tierOverage = tierMembers.reduce((sum, m) => {
+                      const tierTickets   = tier.hasTickets   ? tier.ticketsPerMonth : 0;
+                      const tierCenturies = tier.hasCenturies ? tier.centuries : 0;
+                      const extraTickets   = Math.max(0, m.ticketsPerMonth - tierTickets) * TICKET_REVENUE * 12;
+                      const extraCenturies = Math.max(0, m.centuries - tierCenturies) * CENTURY_REVENUE;
+                      return sum + extraTickets + extraCenturies;
+                    }, 0);
+                    const col = TIER_COLORS[idx % TIER_COLORS.length];
+                    return (
+                      <tr key={tier.id} style={{ borderBottom: "1px solid #f0f0f0" }}>
+                        <td style={{ padding: "10px 12px", fontSize: 13, fontWeight: 600, color: col.bg }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                            <div style={{ width: 10, height: 10, borderRadius: "50%", background: col.accent, flexShrink: 0 }} />
+                            {tier.name}
+                          </div>
+                        </td>
+                        <td style={{ padding: "10px 12px", textAlign: "right", fontSize: 13, color: "#444" }}>{tierMembers.length}</td>
+                        <td style={{ padding: "10px 12px", textAlign: "right", fontSize: 13.5, fontWeight: 700, color: col.accent }}>{tierMembers.length > 0 ? fmt(tierOverage) : "—"}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr style={{ background: "#f4f5f7", borderTop: "2px solid #e0e0e0" }}>
+                    <td style={{ padding: "11px 12px", fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Total</td>
+                    <td style={{ padding: "11px 12px", textAlign: "right", fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>{members.length}</td>
+                    <td style={{ padding: "11px 12px", textAlign: "right", fontSize: 15, fontWeight: 700, color: "#5ba3d9" }}>{fmt(totals.memberOverages)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            {/* Add member by tier */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <div style={{ fontSize: 11, letterSpacing: 1.5, textTransform: "uppercase", color: "#999", fontWeight: 600 }}>Individual Members</div>
+            </div>
+
+            {tiers.map((tier, tidx) => {
+              const tierMembers = members.filter(m => m.tierId === tier.id);
+              const col = TIER_COLORS[tidx % TIER_COLORS.length];
+              
+              return (
+                <div key={tier.id} style={{ marginBottom: 20 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ width: 10, height: 10, borderRadius: "50%", background: col.accent }} />
+                      <span style={{ fontSize: 13, fontWeight: 600, color: col.bg }}>{tier.name}</span>
+                      <span style={{ fontSize: 11, color: "#999" }}>
+                        (Min: {tier.hasTickets ? `${tier.ticketsPerMonth} tickets/mo` : "no tickets"}, {tier.hasCenturies ? `${tier.centuries} centuries/yr` : "no centuries"})
+                      </span>
+                    </div>
+                    <button onClick={() => addMember(tier.id)} style={{ background: col.bg, color: "#fff", border: "none", borderRadius: 6, padding: "5px 12px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+                      + Add Member
+                    </button>
+                  </div>
+
+                  {tierMembers.length === 0 ? (
+                    <div style={{ background: "#f8f8f8", borderRadius: 8, padding: "16px", textAlign: "center", color: "#999", fontSize: 12 }}>
+                      No individual members tracked for this tier yet
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      {tierMembers.map((member) => {
+                        const upd = (k) => (v) => updateMember(member.id, { ...member, [k]: v });
+                        const tierTickets   = tier.hasTickets   ? tier.ticketsPerMonth : 0;
+                        const tierCenturies = tier.hasCenturies ? tier.centuries : 0;
+                        const extraTickets   = Math.max(0, member.ticketsPerMonth - tierTickets) * TICKET_REVENUE * 12;
+                        const extraCenturies = Math.max(0, member.centuries - tierCenturies) * CENTURY_REVENUE;
+                        const totalExtra = extraTickets + extraCenturies;
+                        
+                        return (
+                          <div key={member.id} style={{ background: "#fff", borderRadius: 10, border: "1px solid #e8e8e8", padding: "12px 14px", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+                            <div style={{ display: "grid", gridTemplateColumns: "200px 140px 140px 100px 32px", gap: 12, alignItems: "center" }}>
+                              <input value={member.name} onChange={(e) => upd("name")(e.target.value)}
+                                placeholder="Member name"
+                                style={{ border: "1px solid #ddd", borderRadius: 6, padding: "6px 10px", fontSize: 13, fontWeight: 500, outline: "none", fontFamily: "inherit" }} />
+                              
+                              <div>
+                                <div style={{ fontSize: 9, color: "#999", marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.5 }}>Tickets / mo</div>
+                                <Stepper value={member.ticketsPerMonth} min={0} max={30} step={1} onChange={upd("ticketsPerMonth")} width={140} />
+                              </div>
+                              
+                              <div>
+                                <div style={{ fontSize: 9, color: "#999", marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.5 }}>Centuries / yr</div>
+                                <Stepper value={member.centuries} min={0} max={30} step={1} onChange={upd("centuries")} width={140} />
+                              </div>
+                              
+                              <div style={{ textAlign: "right" }}>
+                                <div style={{ fontSize: 9, color: "#999", textTransform: "uppercase", letterSpacing: 0.5 }}>Extra</div>
+                                <div style={{ fontSize: 13, fontWeight: 700, color: totalExtra > 0 ? col.accent : "#ccc", marginTop: 2 }}>
+                                  {totalExtra > 0 ? fmt(totalExtra) : "—"}
+                                </div>
+                              </div>
+                              
+                              <button onClick={() => removeMember(member.id)} 
+                                style={{ background: "none", border: "none", color: "#ccc", cursor: "pointer", fontSize: 18, padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }}
+                                onMouseEnter={e => e.currentTarget.style.color = "#c0392b"} 
+                                onMouseLeave={e => e.currentTarget.style.color = "#ccc"}
+                              >×</button>
+                            </div>
+                            
+                            {totalExtra > 0 && (
+                              <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid #f0f0f0", fontSize: 11, color: "#666" }}>
+                                {extraTickets > 0 && <span>+{Math.max(0, member.ticketsPerMonth - tierTickets)} tickets/mo = {fmt(extraTickets)}</span>}
+                                {extraTickets > 0 && extraCenturies > 0 && <span style={{ margin: "0 6px", color: "#ddd" }}>•</span>}
+                                {extraCenturies > 0 && <span>+{Math.max(0, member.centuries - tierCenturies)} centuries = {fmt(extraCenturies)}</span>}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </>
+        )}
+
         {/* ══════════ MEMBER VIEW TAB ══════════ */}
         {activeTab === "member" && (
           <MemberView tiers={tiers} totals={totals} />
