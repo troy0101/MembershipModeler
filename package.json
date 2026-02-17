@@ -2,7 +2,7 @@
   "name": "social-club-membership-model",
   "version": "1.0.0",
   "description": "Interactive React application for managing social club membership tiers, budget planning, and fundraisers",
-  "main": "membership_model.jsx",
+  "homepage": "https://troy0101.github.io/MembershipModeler",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
@@ -18,11 +18,21 @@
   ],
   "author": "",
   "license": "MIT",
-  "peerDependencies": {
+  "dependencies": {
     "react": "^18.0.0",
-    "react-dom": "^18.0.0"
-  },
-  "devDependencies": {
+    "react-dom": "^18.0.0",
     "react-scripts": "^5.0.1"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
