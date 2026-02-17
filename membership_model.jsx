@@ -1,3 +1,4 @@
+import { useState, useMemo } from "react";
 // ─── CONSTANTS ───────────────────────────────────────────────
 const TIER_COLORS = [
   { bg: "#1a1a2e", accent: "#e8a838", light: "#fef3d0" },
