@@ -50,6 +50,26 @@ Then open `http://localhost:3000`.
 - Any edits are auto-saved to `PUT /api/model`.
 - This enables shared persistence for anyone using the same hosted link/server.
 
+## Deploy (Public Link with Login + Save)
+
+GitHub Pages cannot run `server.js`, so login/save APIs will not work there.
+
+Use Render for full server-side hosting:
+
+1. Push this repo to GitHub (already done).
+2. In Render, choose **New +** → **Blueprint**.
+3. Select this repository.
+4. Render will detect `render.yaml` and create the web service.
+5. Wait for deploy, then open the Render URL.
+6. Log in with:
+	- Username: `SATS`
+	- Password: `SATS1`
+
+### Important
+
+- Persistent save data is stored on the Render disk mounted at `/var/data`.
+- If you continue using GitHub Pages, you will only get static UI (no login API, no saving).
+
 ## Default Configuration
 
 ### Membership Tiers

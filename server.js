@@ -4,7 +4,8 @@ const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DATA_DIR = path.join(__dirname, "data");
+const DATA_ROOT = process.env.DATA_ROOT || __dirname;
+const DATA_DIR = path.join(DATA_ROOT, "data");
 const DATA_FILE = path.join(DATA_DIR, "model-data.json");
 const LOGIN_USERNAME = "SATS";
 const LOGIN_PASSWORD = "SATS1";
@@ -125,6 +126,10 @@ function requireAuth(req, res, next) {
 
 app.use(express.json({ limit: "2mb" }));
 app.use(express.static(__dirname));
+
+app.get("/healthz", (req, res) => {
+  res.status(200).json({ ok: true });
+});
 
 app.get("/api/session", (req, res) => {
   const cookies = parseCookies(req);
