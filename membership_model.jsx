@@ -1,4 +1,4 @@
-const { useState, useMemo, useEffect, useRef } = React;
+const { useState, useEffect, useRef } = React;
 
 // ─── ERROR BOUNDARY ──────────────────────────────────────────
 class AppErrorBoundary extends React.Component {
@@ -720,7 +720,7 @@ function App() {
   const removeMember  = (id) => setMembers((prev) => prev.filter((m) => m.id !== id));
   const addMember     = (tierId) => setMembers((prev) => [...prev, { id: nextMemberId, tierId, name: "New Member", ticketsPerMonth: 0, centuries: 0 }]);
   // ── totals ──
-  const totals = useMemo(() => {
+  const totals = (() => {
     const membershipTotal  = tiers.reduce((sum, t) => sum + calcTier(t).total, 0);
     
     // Add individual member overages (only the excess beyond tier minimums)
@@ -741,7 +741,7 @@ function App() {
     const fundraiserProfit = fundraisers.reduce((sum, f) => sum + f.profit * f.estSold, 0);
     const totalIncome      = membershipTotal + memberOverages + fundraiserProfit;
     return { membershipTotal, memberOverages, budgetTotal, fundraiserProfit, totalIncome, net: totalIncome - budgetTotal };
-  }, [tiers, members, budget, fundraisers]);
+  })();
   const surplus  = totals.net - goal;
   const onTarget = totals.totalIncome >= goal;
   const pct      = goal > 0 ? Math.min((totals.totalIncome / goal) * 100, 100) : 100;
