@@ -48,27 +48,31 @@ Then open `http://localhost:3000`.
 - Data is persisted in `data/model-data.json`.
 - The app loads from `GET /api/model` when it opens.
 - Any edits are auto-saved to `PUT /api/model`.
-- This enables shared persistence for anyone using the same hosted link/server.
+- This enables shared persistence for anyone using the same running server.
 
-## Deploy (Public Link with Login + Save)
+## Small Group Hosting (Recommended for 2–4 people)
 
-GitHub Pages cannot run `server.js`, so login/save APIs will not work there.
+This project now uses a simple self-hosted setup (no Render required):
 
-Use Render for full server-side hosting:
-
-1. Push this repo to GitHub (already done).
-2. In Render, choose **New +** → **Blueprint**.
-3. Select this repository.
-4. Render will detect `render.yaml` and create the web service.
-5. Wait for deploy, then open the Render URL.
-6. Log in with:
+1. Choose one machine as the host (desktop/laptop that stays on when people use the app).
+2. Clone this repo on that machine.
+3. Run:
+	```bash
+	npm install
+	npm start
+	```
+4. Everyone opens the host link:
+	- On same Wi-Fi/LAN: `http://HOST_IP:3000`
+	- Over internet: use a tunnel or port-forwarding to expose port `3000`
+5. Log in with:
 	- Username: `SATS`
 	- Password: `SATS1`
 
-### Important
+### Notes
 
-- Persistent save data is stored on the Render disk mounted at `/var/data`.
-- If you continue using GitHub Pages, you will only get static UI (no login API, no saving).
+- All shared data lives in `data/model-data.json` on the host machine.
+- Back up that file occasionally (copy it somewhere safe).
+- GitHub Pages is static only and cannot run login/save APIs.
 
 ## Default Configuration
 

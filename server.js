@@ -6,12 +6,6 @@ const crypto = require("crypto");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// JSONBin.io (set JSONBIN_KEY + JSONBIN_BIN_ID on Render for cloud storage)
-const JSONBIN_KEY = process.env.JSONBIN_KEY;
-const JSONBIN_BIN_ID = process.env.JSONBIN_BIN_ID;
-
-// Local file fallback used when JSONBin env vars are absent (local dev)
 const DATA_DIR = path.join(__dirname, "data");
 const DATA_FILE = path.join(DATA_DIR, "model-data.json");
 
@@ -20,6 +14,7 @@ const LOGIN_PASSWORD = "SATS1";
 const SESSION_COOKIE = "membership_session";
 const AUTH_SECRET = process.env.AUTH_SECRET || "change-this-auth-secret";
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 7;
+const COOKIE_SECURE = process.env.COOKIE_SECURE === "true";
 
 const DEFAULT_MODEL = {
   goal: 270000,
@@ -79,38 +74,15 @@ const DEFAULT_MODEL = {
   members: []
 };
 
-// --- Storage helpers ---
-
 async function readModel() {
-  if (JSONBIN_KEY && JSONBIN_BIN_ID) {
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-      headers: { "X-Master-Key": JSONBIN_KEY }
-    });
-    if (!res.ok) throw new Error(`JSONBin read failed: ${res.status}`);
-    const data = await res.json();
-    return sanitizeModel(data.record);
-  } else {
-    await ensureLocalFile();
-    const raw = await fs.readFile(DATA_FILE, "utf8");
-    return sanitizeModel(JSON.parse(raw));
-  }
+  await ensureLocalFile();
+  const raw = await fs.readFile(DATA_FILE, "utf8");
+  return sanitizeModel(JSON.parse(raw));
 }
 
 async function writeModel(model) {
-  if (JSONBIN_KEY && JSONBIN_BIN_ID) {
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Master-Key": JSONBIN_KEY
-      },
-      body: JSON.stringify(model)
-    });
-    if (!res.ok) throw new Error(`JSONBin write failed: ${res.status}`);
-  } else {
-    await ensureLocalFile();
-    await fs.writeFile(DATA_FILE, JSON.stringify(model, null, 2), "utf8");
-  }
+  await ensureLocalFile();
+  await fs.writeFile(DATA_FILE, JSON.stringify(model, null, 2), "utf8");
 }
 
 async function ensureLocalFile() {
@@ -220,13 +192,13 @@ app.post("/api/login", (req, res) => {
 
   const token = createSessionToken(username);
 
-  const secure = process.env.RENDER ? "; Secure" : "";
+  const secure = COOKIE_SECURE ? "; Secure" : "";
   res.setHeader("Set-Cookie", `${SESSION_COOKIE}=${encodeURIComponent(token)}; HttpOnly; Path=/; SameSite=Lax${secure}`);
   return res.json({ ok: true });
 });
 
 app.post("/api/logout", (req, res) => {
-  const secure = process.env.RENDER ? "; Secure" : "";
+  const secure = COOKIE_SECURE ? "; Secure" : "";
   res.setHeader("Set-Cookie", `${SESSION_COOKIE}=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax${secure}`);
   return res.json({ ok: true });
 });
@@ -251,10 +223,6 @@ app.put("/api/model", requireAuth, async (req, res) => {
 });
 
 app.listen(PORT, async () => {
-  if (JSONBIN_KEY && JSONBIN_BIN_ID) {
-    console.log(`Membership Model server running at http://localhost:${PORT} [storage: JSONBin bin ${JSONBIN_BIN_ID}]`);
-  } else {
-    await ensureLocalFile();
-    console.log(`Membership Model server running at http://localhost:${PORT} [storage: local file]`);
-  }
+  await ensureLocalFile();
+  console.log(`Membership Model server running at http://localhost:${PORT} [storage: local file]`);
 });
