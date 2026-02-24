@@ -35,15 +35,20 @@ Interactive React application for managing social club membership tiers, budget 
 
 ```bash
 # Install dependencies
-npm install react react-dom
+npm install
 
-# The component is ready to use - just import and render
-import MembershipModel from './membership_model.jsx'
-
-function App() {
-  return <MembershipModel />
-}
+# Start the shared storage server
+npm start
 ```
+
+Then open `http://localhost:3000`.
+
+## Shared Storage
+
+- Data is persisted in `data/model-data.json`.
+- The app loads from `GET /api/model` when it opens.
+- Any edits are auto-saved to `PUT /api/model`.
+- This enables shared persistence for anyone using the same hosted link/server.
 
 ## Default Configuration
 

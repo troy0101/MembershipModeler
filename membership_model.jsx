@@ -1,4 +1,4 @@
-const { useState, useMemo } = React;
+const { useState, useMemo, useEffect, useRef } = React;
 // ─── CONSTANTS ───────────────────────────────────────────────
 const TIER_COLORS = [
   { bg: "#1a1a2e", accent: "#e8a838", light: "#fef3d0" },
@@ -440,6 +440,219 @@ function App() {
   const [budget, setBudget]         = useState(defaultBudget);
   const [fundraisers, setFundraisers] = useState(defaultFundraisers);
   const [members, setMembers]       = useState(defaultMembers);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [loginUsername, setLoginUsername] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [saveError, setSaveError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const hasInitializedSave = useRef(false);
+
+  useEffect(() => {
+    let active = true;
+
+    const checkSession = async () => {
+      try {
+        const response = await fetch("/api/session", { credentials: "same-origin" });
+        if (!response.ok) {
+          throw new Error("Session check failed");
+        }
+
+        const data = await response.json();
+        if (!active) {
+          return;
+        }
+
+        setIsAuthenticated(Boolean(data.authenticated));
+      } catch (error) {
+        if (!active) {
+          return;
+        }
+        setIsAuthenticated(false);
+      } finally {
+        if (active) {
+          setIsCheckingAuth(false);
+        }
+      }
+    };
+
+    checkSession();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setIsLoadingData(false);
+      return;
+    }
+
+    let active = true;
+    setIsLoadingData(true);
+
+    const loadSavedModel = async () => {
+      try {
+        const response = await fetch("/api/model", { credentials: "same-origin" });
+        if (!response.ok) {
+          if (response.status === 401) {
+            setIsAuthenticated(false);
+            setSaveError("Session expired. Please log in again.");
+            return;
+          }
+          throw new Error("Failed to load model data");
+        }
+
+        const data = await response.json();
+        if (!active) {
+          return;
+        }
+
+        setGoal(Number.isFinite(data.goal) ? data.goal : 270000);
+        setTiers(Array.isArray(data.tiers) ? data.tiers : defaultTiers);
+        setBudget(Array.isArray(data.budget) ? data.budget : defaultBudget);
+        setFundraisers(Array.isArray(data.fundraisers) ? data.fundraisers : defaultFundraisers);
+        setMembers(Array.isArray(data.members) ? data.members : defaultMembers);
+        setSaveError("");
+      } catch (error) {
+        if (!active) {
+          return;
+        }
+        setSaveError("Shared storage unavailable.");
+      } finally {
+        if (active) {
+          setIsLoadingData(false);
+        }
+      }
+    };
+
+    loadSavedModel();
+
+    return () => {
+      active = false;
+    };
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (isLoadingData || !isAuthenticated) {
+      return;
+    }
+
+    if (!hasInitializedSave.current) {
+      hasInitializedSave.current = true;
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        setIsSaving(true);
+        const response = await fetch("/api/model", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ goal, tiers, budget, fundraisers, members }),
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            setIsAuthenticated(false);
+            setSaveError("Session expired. Please log in again.");
+            return;
+          }
+          throw new Error("Failed to save model data");
+        }
+
+        setSaveError("");
+      } catch (error) {
+        setSaveError("Could not save changes to shared storage.");
+      } finally {
+        setIsSaving(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [goal, tiers, budget, fundraisers, members, isLoadingData, isAuthenticated]);
+
+  const submitLogin = async (e) => {
+    e.preventDefault();
+    setLoginError("");
+    setIsLoggingIn(true);
+
+    try {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ username: loginUsername, password: loginPassword }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Invalid credentials");
+      }
+
+      setIsAuthenticated(true);
+      setLoginPassword("");
+      setSaveError("");
+    } catch (error) {
+      setLoginError("Invalid username or password.");
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await fetch("/api/logout", {
+        method: "POST",
+        credentials: "same-origin",
+      });
+    } finally {
+      setIsAuthenticated(false);
+      setLoginPassword("");
+      setLoginError("");
+    }
+  };
+
+  if (isCheckingAuth) {
+    return (
+      <div style={{ fontFamily: "'Georgia', 'Times New Roman', serif", background: "#f4f5f7", minHeight: "100vh", display: "grid", placeItems: "center", padding: 20 }}>
+        <div style={{ color: "#666", fontSize: 14 }}>Checking login...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div style={{ fontFamily: "'Georgia', 'Times New Roman', serif", background: "#f4f5f7", minHeight: "100vh", display: "grid", placeItems: "center", padding: 20 }}>
+        <form onSubmit={submitLogin} style={{ width: "100%", maxWidth: 380, background: "#fff", borderRadius: 12, border: "1px solid #e4e4e4", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", padding: 24 }}>
+          <div style={{ textAlign: "center", marginBottom: 16 }}>
+            <div style={{ fontSize: 10, letterSpacing: 3.5, textTransform: "uppercase", color: "#999", marginBottom: 4 }}>Social Club</div>
+            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 400, color: "#1a1a1a", letterSpacing: 0.5 }}>Sign In</h1>
+          </div>
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 11, color: "#666", marginBottom: 5 }}>Username</div>
+            <input type="text" value={loginUsername} onChange={(e) => setLoginUsername(e.target.value)}
+              style={{ width: "100%", border: "1px solid #d9d9d9", borderRadius: 8, padding: "10px 12px", fontSize: 14, fontFamily: "inherit", boxSizing: "border-box", outline: "none" }}
+            />
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 11, color: "#666", marginBottom: 5 }}>Password</div>
+            <input type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)}
+              style={{ width: "100%", border: "1px solid #d9d9d9", borderRadius: 8, padding: "10px 12px", fontSize: 14, fontFamily: "inherit", boxSizing: "border-box", outline: "none" }}
+            />
+          </div>
+          {loginError && <div style={{ color: "#c0392b", fontSize: 12, marginBottom: 12 }}>{loginError}</div>}
+          <button type="submit" disabled={isLoggingIn} style={{ width: "100%", background: "#1a1a2e", color: "#fff", border: "none", borderRadius: 8, padding: "10px 12px", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", opacity: isLoggingIn ? 0.7 : 1 }}>
+            {isLoggingIn ? "Signing in..." : "Sign In"}
+          </button>
+        </form>
+      </div>
+    );
+  }
   // ── tier CRUD ──
   const nextTierId  = Math.max(...tiers.map((t) => t.id), 0) + 1;
   const updateTier  = (id, updated) => setTiers((prev) => prev.map((t) => (t.id === id ? updated : t)));
@@ -511,6 +724,12 @@ function App() {
         <div style={{ textAlign: "center", marginBottom: 20 }}>
           <div style={{ fontSize: 10, letterSpacing: 3.5, textTransform: "uppercase", color: "#999", marginBottom: 4 }}>Social Club</div>
           <h1 style={{ margin: 0, fontSize: 24, fontWeight: 400, color: "#1a1a1a", letterSpacing: 0.5 }}>Membership & Revenue Model</h1>
+          <div style={{ marginTop: 8, fontSize: 11, color: saveError ? "#c0392b" : "#888" }}>
+            {saveError ? saveError : (isLoadingData ? "Loading shared data..." : (isSaving ? "Saving..." : "All changes saved"))}
+          </div>
+          <button onClick={logout} style={{ marginTop: 10, background: "#fff", color: "#666", border: "1px solid #ddd", borderRadius: 6, padding: "5px 12px", fontSize: 11.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+            Log out
+          </button>
         </div>
         {/* ── Goal / Summary Card ── */}
         <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e4e4e4", padding: "18px 22px", marginBottom: 18, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
