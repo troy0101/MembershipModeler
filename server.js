@@ -188,7 +188,8 @@ app.post("/api/login", (req, res) => {
   const token = createSessionToken();
   activeSessions.add(token);
 
-  res.setHeader("Set-Cookie", `${SESSION_COOKIE}=${encodeURIComponent(token)}; HttpOnly; Path=/; SameSite=Lax`);
+  const secure = process.env.RENDER ? "; Secure" : "";
+  res.setHeader("Set-Cookie", `${SESSION_COOKIE}=${encodeURIComponent(token)}; HttpOnly; Path=/; SameSite=Lax${secure}`);
   return res.json({ ok: true });
 });
 
@@ -199,7 +200,8 @@ app.post("/api/logout", (req, res) => {
     activeSessions.delete(token);
   }
 
-  res.setHeader("Set-Cookie", `${SESSION_COOKIE}=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax`);
+  const secure = process.env.RENDER ? "; Secure" : "";
+  res.setHeader("Set-Cookie", `${SESSION_COOKIE}=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax${secure}`);
   return res.json({ ok: true });
 });
 

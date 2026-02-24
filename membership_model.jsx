@@ -1,4 +1,31 @@
 const { useState, useMemo, useEffect, useRef } = React;
+
+// ─── ERROR BOUNDARY ──────────────────────────────────────────
+class AppErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ fontFamily: "Georgia, serif", background: "#f4f5f7", minHeight: "100vh", display: "grid", placeItems: "center", padding: 20 }}>
+          <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e4e4e4", padding: 32, maxWidth: 480, textAlign: "center" }}>
+            <div style={{ fontSize: 20, marginBottom: 12 }}>⚠️</div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: "#1a1a1a", marginBottom: 8 }}>Something went wrong</div>
+            <div style={{ fontSize: 12, color: "#888", marginBottom: 20 }}>{this.state.error?.message || "Unknown error"}</div>
+            <button onClick={() => window.location.reload()} style={{ background: "#1a1a2e", color: "#fff", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Reload page</button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // ─── CONSTANTS ───────────────────────────────────────────────
 const TIER_COLORS = [
   { bg: "#1a1a2e", accent: "#e8a838", light: "#fef3d0" },
@@ -625,6 +652,17 @@ function App() {
     );
   }
 
+  if (isAuthenticated && isLoadingData) {
+    return (
+      <div style={{ fontFamily: "'Georgia', 'Times New Roman', serif", background: "#f4f5f7", minHeight: "100vh", display: "grid", placeItems: "center", padding: 20 }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 10, letterSpacing: 3.5, textTransform: "uppercase", color: "#999", marginBottom: 8 }}>Social Club</div>
+          <div style={{ color: "#555", fontSize: 15 }}>Loading shared data...</div>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return (
       <div style={{ fontFamily: "'Georgia', 'Times New Roman', serif", background: "#f4f5f7", minHeight: "100vh", display: "grid", placeItems: "center", padding: 20 }}>
@@ -1160,4 +1198,12 @@ function App() {
   );
 }
 
-window.App = App;
+function RootApp() {
+  return (
+    <AppErrorBoundary>
+      <App />
+    </AppErrorBoundary>
+  );
+}
+
+window.App = RootApp;
