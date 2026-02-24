@@ -4,9 +4,15 @@ const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DATA_ROOT = process.env.DATA_ROOT || __dirname;
-const DATA_DIR = path.join(DATA_ROOT, "data");
+
+// JSONBin.io (set JSONBIN_KEY + JSONBIN_BIN_ID on Render for cloud storage)
+const JSONBIN_KEY = process.env.JSONBIN_KEY;
+const JSONBIN_BIN_ID = process.env.JSONBIN_BIN_ID;
+
+// Local file fallback used when JSONBin env vars are absent (local dev)
+const DATA_DIR = path.join(__dirname, "data");
 const DATA_FILE = path.join(DATA_DIR, "model-data.json");
+
 const LOGIN_USERNAME = "SATS";
 const LOGIN_PASSWORD = "SATS1";
 const SESSION_COOKIE = "membership_session";
@@ -70,7 +76,41 @@ const DEFAULT_MODEL = {
   members: []
 };
 
-async function ensureDataFile() {
+// --- Storage helpers ---
+
+async function readModel() {
+  if (JSONBIN_KEY && JSONBIN_BIN_ID) {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+      headers: { "X-Master-Key": JSONBIN_KEY }
+    });
+    if (!res.ok) throw new Error(`JSONBin read failed: ${res.status}`);
+    const data = await res.json();
+    return sanitizeModel(data.record);
+  } else {
+    await ensureLocalFile();
+    const raw = await fs.readFile(DATA_FILE, "utf8");
+    return sanitizeModel(JSON.parse(raw));
+  }
+}
+
+async function writeModel(model) {
+  if (JSONBIN_KEY && JSONBIN_BIN_ID) {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Master-Key": JSONBIN_KEY
+      },
+      body: JSON.stringify(model)
+    });
+    if (!res.ok) throw new Error(`JSONBin write failed: ${res.status}`);
+  } else {
+    await ensureLocalFile();
+    await fs.writeFile(DATA_FILE, JSON.stringify(model, null, 2), "utf8");
+  }
+}
+
+async function ensureLocalFile() {
   await fs.mkdir(DATA_DIR, { recursive: true });
   try {
     await fs.access(DATA_FILE);
@@ -164,27 +204,28 @@ app.post("/api/logout", (req, res) => {
 
 app.get("/api/model", requireAuth, async (req, res) => {
   try {
-    await ensureDataFile();
-    const raw = await fs.readFile(DATA_FILE, "utf8");
-    const parsed = JSON.parse(raw);
-    res.json(sanitizeModel(parsed));
+    res.json(await readModel());
   } catch (error) {
+    console.error("GET /api/model error:", error.message);
     res.status(500).json({ error: "Unable to load saved model data." });
   }
 });
 
 app.put("/api/model", requireAuth, async (req, res) => {
   try {
-    await ensureDataFile();
-    const cleanModel = sanitizeModel(req.body);
-    await fs.writeFile(DATA_FILE, JSON.stringify(cleanModel, null, 2), "utf8");
+    await writeModel(sanitizeModel(req.body));
     res.json({ ok: true });
   } catch (error) {
+    console.error("PUT /api/model error:", error.message);
     res.status(500).json({ error: "Unable to save model data." });
   }
 });
 
 app.listen(PORT, async () => {
-  await ensureDataFile();
-  console.log(`Membership Model server running at http://localhost:${PORT}`);
+  if (JSONBIN_KEY && JSONBIN_BIN_ID) {
+    console.log(`Membership Model server running at http://localhost:${PORT} [storage: JSONBin bin ${JSONBIN_BIN_ID}]`);
+  } else {
+    await ensureLocalFile();
+    console.log(`Membership Model server running at http://localhost:${PORT} [storage: local file]`);
+  }
 });
