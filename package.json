@@ -4,6 +4,7 @@
   "description": "Interactive React application for managing social club membership tiers, budget planning, and fundraisers",
   "main": "membership_model.jsx",
   "scripts": {
+    "build:client": "esbuild membership_model.jsx --loader:.jsx=jsx --outfile=membership_model.js --format=iife --target=es2018",
     "start": "node server.js",
     "serve": "node server.js"
   },
@@ -17,6 +18,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "esbuild": "^0.25.9",
     "dotenv": "^17.3.1",
     "express": "^4.21.2"
   }
