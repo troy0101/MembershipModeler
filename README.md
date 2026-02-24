@@ -50,6 +50,25 @@ Then open `http://localhost:3000`.
 - Any edits are auto-saved to `PUT /api/model`.
 - This enables shared persistence for anyone using the same running server.
 
+## Railway (24/7 shared link)
+
+If you want the app online all day without your computer running, Railway is the simplest path.
+
+1. In Railway, open your project (already connected to this repo).
+2. Add a **Volume** and mount it at `/data`.
+3. Add these Variables:
+	- `AUTH_SECRET` = any long random string
+	- `COOKIE_SECURE` = `true`
+	- `DATA_ROOT` = `/data`
+4. Deploy the latest commit.
+5. Open your Railway service domain and log in:
+	- Username: `SATS`
+	- Password: `SATS1`
+
+Why this matters:
+- `DATA_ROOT=/data` stores `model-data.json` on persistent Railway volume storage.
+- Without a volume, edits are lost on restarts/redeploys.
+
 ## Small Group Hosting (Recommended for 2–4 people)
 
 This project now uses a simple self-hosted setup (no Render required):

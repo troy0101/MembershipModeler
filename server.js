@@ -6,7 +6,8 @@ const crypto = require("crypto");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DATA_DIR = path.join(__dirname, "data");
+const DATA_ROOT = process.env.DATA_ROOT || __dirname;
+const DATA_DIR = path.join(DATA_ROOT, "data");
 const DATA_FILE = path.join(DATA_DIR, "model-data.json");
 
 const LOGIN_USERNAME = "SATS";
@@ -224,5 +225,5 @@ app.put("/api/model", requireAuth, async (req, res) => {
 
 app.listen(PORT, async () => {
   await ensureLocalFile();
-  console.log(`Membership Model server running at http://localhost:${PORT} [storage: local file]`);
+  console.log(`Membership Model server running at http://localhost:${PORT} [storage: ${DATA_FILE}]`);
 });
