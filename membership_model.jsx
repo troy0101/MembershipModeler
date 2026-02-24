@@ -1005,11 +1005,12 @@ function App() {
         {activeTab === "budget" && (
           <>
             <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e4e4e4", overflow: "hidden", marginBottom: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <div style={{ overflowX: isMobileTabs ? "auto" : "visible" }}>
+              <table style={{ width: "100%", minWidth: isMobileTabs ? 620 : "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ background: "#f8f8f8" }}>
                     {["Category", "Items", "Subtotal"].map((h, i) => (
-                      <th key={h} style={{ padding: "9px 14px", fontSize: 10, letterSpacing: 1, textTransform: "uppercase", color: "#999", fontWeight: 600, textAlign: i === 0 ? "left" : "right", borderBottom: "1px solid #eee" }}>{h}</th>
+                      <th key={h} style={{ padding: isMobileTabs ? "8px 10px" : "9px 14px", fontSize: isMobileTabs ? 9 : 10, letterSpacing: 1, textTransform: "uppercase", color: "#999", fontWeight: 600, textAlign: i === 0 ? "left" : "right", borderBottom: "1px solid #eee" }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -1018,25 +1019,26 @@ function App() {
                     const sub = s.items.reduce((sum, i) => sum + i.qty * i.unit, 0);
                     return (
                       <tr key={s.id} style={{ borderBottom: "1px solid #f0f0f0" }}>
-                        <td style={{ padding: "10px 14px", fontSize: 13, fontWeight: 600, color: s.color }}>
+                        <td style={{ padding: isMobileTabs ? "9px 10px" : "10px 14px", fontSize: isMobileTabs ? 12 : 13, fontWeight: 600, color: s.color }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                             <div style={{ width: 10, height: 10, borderRadius: "50%", background: s.accent, flexShrink: 0 }} />
                             {s.label}
                           </div>
                         </td>
-                        <td style={{ padding: "10px 14px", textAlign: "right", fontSize: 12.5, color: "#888" }}>{s.items.length} item{s.items.length !== 1 ? "s" : ""}</td>
-                        <td style={{ padding: "10px 14px", textAlign: "right", fontSize: 13.5, fontWeight: 700, color: s.accent }}>{fmt(sub)}</td>
+                        <td style={{ padding: isMobileTabs ? "9px 10px" : "10px 14px", textAlign: "right", fontSize: isMobileTabs ? 11.5 : 12.5, color: "#888" }}>{s.items.length} item{s.items.length !== 1 ? "s" : ""}</td>
+                        <td style={{ padding: isMobileTabs ? "9px 10px" : "10px 14px", textAlign: "right", fontSize: isMobileTabs ? 12.5 : 13.5, fontWeight: 700, color: s.accent }}>{fmt(sub)}</td>
                       </tr>
                     );
                   })}
                 </tbody>
                 <tfoot>
                   <tr style={{ background: "#f4f5f7", borderTop: "2px solid #e0e0e0" }}>
-                    <td colSpan={2} style={{ padding: "11px 14px", fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Total Budget</td>
-                    <td style={{ padding: "11px 14px", textAlign: "right", fontSize: 15, fontWeight: 700, color: "#c0392b" }}>{fmt(totals.budgetTotal)}</td>
+                    <td colSpan={2} style={{ padding: isMobileTabs ? "10px 10px" : "11px 14px", fontSize: isMobileTabs ? 12 : 13, fontWeight: 700, color: "#1a1a1a" }}>Total Budget</td>
+                    <td style={{ padding: isMobileTabs ? "10px 10px" : "11px 14px", textAlign: "right", fontSize: isMobileTabs ? 14 : 15, fontWeight: 700, color: "#c0392b" }}>{fmt(totals.budgetTotal)}</td>
                   </tr>
                 </tfoot>
               </table>
+              </div>
             </div>
             <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e4e4e4", padding: "14px 18px", marginBottom: 18, boxShadow: "0 1px 3px rgba(0,0,0,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
@@ -1066,37 +1068,39 @@ function App() {
           <>
             {/* Summary table */}
             <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e4e4e4", overflow: "hidden", marginBottom: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <div style={{ overflowX: isMobileTabs ? "auto" : "visible" }}>
+              <table style={{ width: "100%", minWidth: isMobileTabs ? 700 : "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ background: "#f8f8f8" }}>
                     {["Fundraiser", "Member Cost", "Club Profit", "Est. Sold", "Total Profit"].map((h, i) => (
-                      <th key={h} style={{ padding: "9px 12px", fontSize: 10, letterSpacing: 1, textTransform: "uppercase", color: "#999", fontWeight: 600, textAlign: i === 0 ? "left" : "right", borderBottom: "1px solid #eee" }}>{h}</th>
+                      <th key={h} style={{ padding: isMobileTabs ? "8px 10px" : "9px 12px", fontSize: isMobileTabs ? 9 : 10, letterSpacing: 1, textTransform: "uppercase", color: "#999", fontWeight: 600, textAlign: i === 0 ? "left" : "right", borderBottom: "1px solid #eee" }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {fundraisers.map((f) => (
                     <tr key={f.id} style={{ borderBottom: "1px solid #f0f0f0" }}>
-                      <td style={{ padding: "10px 12px", fontSize: 13, fontWeight: 600, color: FUND_BG }}>
+                      <td style={{ padding: isMobileTabs ? "9px 10px" : "10px 12px", fontSize: isMobileTabs ? 12 : 13, fontWeight: 600, color: FUND_BG }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                           <div style={{ width: 10, height: 10, borderRadius: "50%", background: FUND_ACCENT, flexShrink: 0 }} />
                           {f.name}
                         </div>
                       </td>
-                      <td style={{ padding: "10px 12px", textAlign: "right", fontSize: 13, color: f.cost > 0 ? "#444" : "#bbb" }}>{f.cost > 0 ? fmt(f.cost) : "—"}</td>
-                      <td style={{ padding: "10px 12px", textAlign: "right", fontSize: 13, color: "#444" }}>{fmt(f.profit)}</td>
-                      <td style={{ padding: "10px 12px", textAlign: "right", fontSize: 13, color: "#444" }}>{f.estSold}</td>
-                      <td style={{ padding: "10px 12px", textAlign: "right", fontSize: 13.5, fontWeight: 700, color: FUND_ACCENT }}>{fmt(f.profit * f.estSold)}</td>
+                      <td style={{ padding: isMobileTabs ? "9px 10px" : "10px 12px", textAlign: "right", fontSize: isMobileTabs ? 12 : 13, color: f.cost > 0 ? "#444" : "#bbb" }}>{f.cost > 0 ? fmt(f.cost) : "—"}</td>
+                      <td style={{ padding: isMobileTabs ? "9px 10px" : "10px 12px", textAlign: "right", fontSize: isMobileTabs ? 12 : 13, color: "#444" }}>{fmt(f.profit)}</td>
+                      <td style={{ padding: isMobileTabs ? "9px 10px" : "10px 12px", textAlign: "right", fontSize: isMobileTabs ? 12 : 13, color: "#444" }}>{f.estSold}</td>
+                      <td style={{ padding: isMobileTabs ? "9px 10px" : "10px 12px", textAlign: "right", fontSize: isMobileTabs ? 12.5 : 13.5, fontWeight: 700, color: FUND_ACCENT }}>{fmt(f.profit * f.estSold)}</td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot>
                   <tr style={{ background: "#f4f5f7", borderTop: "2px solid #e0e0e0" }}>
-                    <td colSpan={4} style={{ padding: "11px 12px", fontSize: 13, fontWeight: 700, color: "#1a1a1a" }}>Total Fundraiser Profit</td>
-                    <td style={{ padding: "11px 12px", textAlign: "right", fontSize: 15, fontWeight: 700, color: FUND_BG }}>{fmt(totals.fundraiserProfit)}</td>
+                    <td colSpan={4} style={{ padding: isMobileTabs ? "10px 10px" : "11px 12px", fontSize: isMobileTabs ? 12 : 13, fontWeight: 700, color: "#1a1a1a" }}>Total Fundraiser Profit</td>
+                    <td style={{ padding: isMobileTabs ? "10px 10px" : "11px 12px", textAlign: "right", fontSize: isMobileTabs ? 14 : 15, fontWeight: 700, color: FUND_BG }}>{fmt(totals.fundraiserProfit)}</td>
                   </tr>
                 </tfoot>
               </table>
+              </div>
             </div>
             {/* Editable cards */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
