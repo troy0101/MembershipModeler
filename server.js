@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const fs = require("fs/promises");
 const path = require("path");
+const crypto = require("crypto");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,7 +18,8 @@ const DATA_FILE = path.join(DATA_DIR, "model-data.json");
 const LOGIN_USERNAME = "SATS";
 const LOGIN_PASSWORD = "SATS1";
 const SESSION_COOKIE = "membership_session";
-const activeSessions = new Set();
+const AUTH_SECRET = process.env.AUTH_SECRET || "change-this-auth-secret";
+const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 7;
 
 const DEFAULT_MODEL = {
   goal: 270000,
@@ -150,15 +152,46 @@ function parseCookies(req) {
   }, {});
 }
 
-function createSessionToken() {
-  return `${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`;
+function createSessionToken(username) {
+  const payload = {
+    u: username,
+    exp: Date.now() + SESSION_TTL_MS,
+    n: crypto.randomBytes(12).toString("hex")
+  };
+
+  const encoded = Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
+  const signature = crypto.createHmac("sha256", AUTH_SECRET).update(encoded).digest("base64url");
+  return `${encoded}.${signature}`;
+}
+
+function verifySessionToken(token) {
+  if (!token || typeof token !== "string") {
+    return false;
+  }
+
+  const [encoded, signature] = token.split(".");
+  if (!encoded || !signature) {
+    return false;
+  }
+
+  const expected = crypto.createHmac("sha256", AUTH_SECRET).update(encoded).digest("base64url");
+  if (signature !== expected) {
+    return false;
+  }
+
+  try {
+    const payload = JSON.parse(Buffer.from(encoded, "base64url").toString("utf8"));
+    return payload && payload.u === LOGIN_USERNAME && Number.isFinite(payload.exp) && payload.exp > Date.now();
+  } catch {
+    return false;
+  }
 }
 
 function requireAuth(req, res, next) {
   const cookies = parseCookies(req);
   const token = cookies[SESSION_COOKIE];
 
-  if (!token || !activeSessions.has(token)) {
+  if (!verifySessionToken(token)) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
@@ -175,7 +208,7 @@ app.get("/healthz", (req, res) => {
 app.get("/api/session", (req, res) => {
   const cookies = parseCookies(req);
   const token = cookies[SESSION_COOKIE];
-  res.json({ authenticated: Boolean(token && activeSessions.has(token)) });
+  res.json({ authenticated: verifySessionToken(token) });
 });
 
 app.post("/api/login", (req, res) => {
@@ -185,8 +218,7 @@ app.post("/api/login", (req, res) => {
     return res.status(401).json({ error: "Invalid username or password." });
   }
 
-  const token = createSessionToken();
-  activeSessions.add(token);
+  const token = createSessionToken(username);
 
   const secure = process.env.RENDER ? "; Secure" : "";
   res.setHeader("Set-Cookie", `${SESSION_COOKIE}=${encodeURIComponent(token)}; HttpOnly; Path=/; SameSite=Lax${secure}`);
@@ -194,12 +226,6 @@ app.post("/api/login", (req, res) => {
 });
 
 app.post("/api/logout", (req, res) => {
-  const cookies = parseCookies(req);
-  const token = cookies[SESSION_COOKIE];
-  if (token) {
-    activeSessions.delete(token);
-  }
-
   const secure = process.env.RENDER ? "; Secure" : "";
   res.setHeader("Set-Cookie", `${SESSION_COOKIE}=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax${secure}`);
   return res.json({ ok: true });
