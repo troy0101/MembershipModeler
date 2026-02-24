@@ -281,6 +281,7 @@
     } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: netPerMember >= 0 ? "#2e7d52" : "#c0392b", textTransform: "uppercase", letterSpacing: 1.4, fontWeight: 600, marginBottom: 4 } }, netPerMember >= 0 ? "\u2713 Net Positive" : "\u2717 Net Negative", " \u2014 Per Member"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13.5, color: "#555" } }, /* @__PURE__ */ React.createElement("span", { style: { color: col.bg, fontWeight: 600 } }, fmt(m.total)), " brought in", /* @__PURE__ */ React.createElement("span", { style: { color: "#aaa", margin: "0 6px" } }, "\u2212"), /* @__PURE__ */ React.createElement("span", { style: { color: "#c0392b", fontWeight: 600 } }, fmt(budgetPerMember)), " budget share")), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 32, fontWeight: 700, color: netPerMember >= 0 ? "#2e7d52" : "#c0392b", letterSpacing: -1 } }, netPerMember >= 0 ? "+" : "\u2212", fmt(Math.abs(netPerMember)))));
   }
   function App() {
+    var _a;
     const [goal, setGoal] = useState(27e4);
     const [activeTab, setActiveTab] = useState("membership");
     const [tiers, setTiers] = useState(defaultTiers);
@@ -296,6 +297,8 @@
     const [isLoadingData, setIsLoadingData] = useState(true);
     const [saveError, setSaveError] = useState("");
     const [isSaving, setIsSaving] = useState(false);
+    const [isMobileTabs, setIsMobileTabs] = useState(typeof window !== "undefined" ? window.innerWidth < 760 : false);
+    const [isTabMenuOpen, setIsTabMenuOpen] = useState(false);
     const hasInitializedSave = useRef(false);
     useEffect(() => {
       let active = true;
@@ -404,6 +407,16 @@
       }, 400);
       return () => clearTimeout(timer);
     }, [goal, tiers, budget, fundraisers, members, isLoadingData, isAuthenticated]);
+    useEffect(() => {
+      const onResize = () => {
+        setIsMobileTabs(window.innerWidth < 760);
+      };
+      window.addEventListener("resize", onResize);
+      return () => window.removeEventListener("resize", onResize);
+    }, []);
+    useEffect(() => {
+      setIsTabMenuOpen(false);
+    }, [activeTab, isMobileTabs]);
     const submitLogin = async (e) => {
       e.preventDefault();
       setLoginError("");
@@ -553,7 +566,46 @@
         onMouseLeave: (e) => e.currentTarget.style.background = "transparent"
       },
       "+"
-    )))), /* @__PURE__ */ React.createElement("div", { style: { background: "#eee", borderRadius: 4, height: 8, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: `${pct}%`, background: pct >= 100 ? "linear-gradient(90deg, #2e7d52, #4caf7a)" : "linear-gradient(90deg, #c0392b, #e74c3c)", borderRadius: 4, transition: "width 0.3s ease" } })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, fontWeight: 600, color: onTarget ? "#2e7d52" : "#c0392b" } }, onTarget ? `\u2713 On target \u2014 ${fmt(totals.totalIncome - goal)} surplus` : `\u2717 ${fmt(goal - totals.totalIncome)} short of goal`), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: "#999", textTransform: "uppercase", letterSpacing: 0.8 } }, "Membership"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, fontWeight: 700, color: "#1a1a2e" } }, fmt(totals.membershipTotal))), totals.memberOverages > 0 && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: "#999", textTransform: "uppercase", letterSpacing: 0.8 } }, "+ Overages"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, fontWeight: 700, color: "#5ba3d9" } }, fmt(totals.memberOverages))), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: "#999", textTransform: "uppercase", letterSpacing: 0.8 } }, "Fundraisers"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, fontWeight: 700, color: FUND_BG } }, fmt(totals.fundraiserProfit))), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: "#999", textTransform: "uppercase", letterSpacing: 0.8 } }, "Budget"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, fontWeight: 700, color: "#c0392b" } }, "\u2212", fmt(totals.budgetTotal))), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: "#999", textTransform: "uppercase", letterSpacing: 0.8 } }, "Net"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, fontWeight: 700, color: totals.net >= 0 ? "#2e7d52" : "#c0392b" } }, fmt(totals.net)))))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 18 } }, tabs.map((tab) => /* @__PURE__ */ React.createElement(
+    )))), /* @__PURE__ */ React.createElement("div", { style: { background: "#eee", borderRadius: 4, height: 8, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { height: "100%", width: `${pct}%`, background: pct >= 100 ? "linear-gradient(90deg, #2e7d52, #4caf7a)" : "linear-gradient(90deg, #c0392b, #e74c3c)", borderRadius: 4, transition: "width 0.3s ease" } })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, fontWeight: 600, color: onTarget ? "#2e7d52" : "#c0392b" } }, onTarget ? `\u2713 On target \u2014 ${fmt(totals.totalIncome - goal)} surplus` : `\u2717 ${fmt(goal - totals.totalIncome)} short of goal`), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: "#999", textTransform: "uppercase", letterSpacing: 0.8 } }, "Membership"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, fontWeight: 700, color: "#1a1a2e" } }, fmt(totals.membershipTotal))), totals.memberOverages > 0 && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: "#999", textTransform: "uppercase", letterSpacing: 0.8 } }, "+ Overages"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, fontWeight: 700, color: "#5ba3d9" } }, fmt(totals.memberOverages))), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: "#999", textTransform: "uppercase", letterSpacing: 0.8 } }, "Fundraisers"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, fontWeight: 700, color: FUND_BG } }, fmt(totals.fundraiserProfit))), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: "#999", textTransform: "uppercase", letterSpacing: 0.8 } }, "Budget"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, fontWeight: 700, color: "#c0392b" } }, "\u2212", fmt(totals.budgetTotal))), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9.5, color: "#999", textTransform: "uppercase", letterSpacing: 0.8 } }, "Net"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, fontWeight: 700, color: totals.net >= 0 ? "#2e7d52" : "#c0392b" } }, fmt(totals.net)))))), isMobileTabs ? /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 18, position: "relative" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, fontWeight: 600, color: "#1a1a1a" } }, ((_a = tabs.find((t) => t.id === activeTab)) == null ? void 0 : _a.label) || "Select Tab"), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        onClick: () => setIsTabMenuOpen((open) => !open),
+        style: {
+          background: "#fff",
+          color: "#1a1a2e",
+          border: "1px solid #ddd",
+          borderRadius: 8,
+          padding: "7px 10px",
+          fontSize: 15,
+          fontWeight: 700,
+          cursor: "pointer",
+          fontFamily: "inherit",
+          lineHeight: 1
+        },
+        "aria-label": "Toggle tab menu"
+      },
+      "\u2630"
+    )), isTabMenuOpen && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 8, background: "#fff", border: "1px solid #ddd", borderRadius: 10, overflow: "hidden", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" } }, tabs.map((tab) => /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        key: tab.id,
+        onClick: () => setActiveTab(tab.id),
+        style: {
+          width: "100%",
+          textAlign: "left",
+          background: activeTab === tab.id ? "#1a1a2e" : "#fff",
+          color: activeTab === tab.id ? "#fff" : "#444",
+          border: "none",
+          borderBottom: "1px solid #eee",
+          padding: "10px 12px",
+          fontSize: 13,
+          fontWeight: 600,
+          cursor: "pointer",
+          fontFamily: "inherit"
+        }
+      },
+      tab.label
+    )))) : /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 18 } }, tabs.map((tab) => /* @__PURE__ */ React.createElement(
       "button",
       {
         key: tab.id,

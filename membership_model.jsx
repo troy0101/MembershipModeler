@@ -476,6 +476,8 @@ function App() {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [saveError, setSaveError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isMobileTabs, setIsMobileTabs] = useState(typeof window !== "undefined" ? window.innerWidth < 760 : false);
+  const [isTabMenuOpen, setIsTabMenuOpen] = useState(false);
   const hasInitializedSave = useRef(false);
 
   useEffect(() => {
@@ -603,6 +605,19 @@ function App() {
 
     return () => clearTimeout(timer);
   }, [goal, tiers, budget, fundraisers, members, isLoadingData, isAuthenticated]);
+
+  useEffect(() => {
+    const onResize = () => {
+      setIsMobileTabs(window.innerWidth < 760);
+    };
+
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  useEffect(() => {
+    setIsTabMenuOpen(false);
+  }, [activeTab, isMobileTabs]);
 
   const submitLogin = async (e) => {
     e.preventDefault();
@@ -829,19 +844,72 @@ function App() {
           </div>
         </div>
         {/* Tabs */}
-        <div style={{ display: "flex", gap: 6, marginBottom: 18 }}>
-          {tabs.map((tab) => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              style={{
-                background: activeTab === tab.id ? "#1a1a2e" : "#fff",
-                color:      activeTab === tab.id ? "#fff"    : "#666",
-                border: "1px solid " + (activeTab === tab.id ? "#1a1a2e" : "#ddd"),
-                borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 600,
-                cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s",
-              }}
-            >{tab.label}</button>
-          ))}
-        </div>
+        {isMobileTabs ? (
+          <div style={{ marginBottom: 18, position: "relative" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a" }}>
+                {tabs.find((t) => t.id === activeTab)?.label || "Select Tab"}
+              </div>
+              <button
+                onClick={() => setIsTabMenuOpen((open) => !open)}
+                style={{
+                  background: "#fff",
+                  color: "#1a1a2e",
+                  border: "1px solid #ddd",
+                  borderRadius: 8,
+                  padding: "7px 10px",
+                  fontSize: 15,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  lineHeight: 1,
+                }}
+                aria-label="Toggle tab menu"
+              >
+                ☰
+              </button>
+            </div>
+            {isTabMenuOpen && (
+              <div style={{ marginTop: 8, background: "#fff", border: "1px solid #ddd", borderRadius: 10, overflow: "hidden", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}>
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    style={{
+                      width: "100%",
+                      textAlign: "left",
+                      background: activeTab === tab.id ? "#1a1a2e" : "#fff",
+                      color: activeTab === tab.id ? "#fff" : "#444",
+                      border: "none",
+                      borderBottom: "1px solid #eee",
+                      padding: "10px 12px",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div style={{ display: "flex", gap: 6, marginBottom: 18 }}>
+            {tabs.map((tab) => (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                style={{
+                  background: activeTab === tab.id ? "#1a1a2e" : "#fff",
+                  color:      activeTab === tab.id ? "#fff"    : "#666",
+                  border: "1px solid " + (activeTab === tab.id ? "#1a1a2e" : "#ddd"),
+                  borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 600,
+                  cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s",
+                }}
+              >{tab.label}</button>
+            ))}
+          </div>
+        )}
         {/* ══════════ MEMBERSHIP TAB ══════════ */}
         {activeTab === "membership" && (
           <>
