@@ -73,13 +73,57 @@
       accent: "#d9855b",
       items: [
         { id: 1, name: "Garage", qty: 12, unit: 2e3 },
-        { id: 2, name: "Association Dues", qty: 12, unit: 833.33 }
+        { id: 2, name: "Association Dues", qty: 12, unit: 833.33 },
+        { id: 3, name: "Building Maintenance", qty: 1, unit: 1e4 }
+      ]
+    },
+    {
+      id: "taxesfees",
+      label: "Taxes/Fees",
+      color: "#2d3d1e",
+      accent: "#8ad95b",
+      items: [
+        { id: 1, name: "Taxes/Fees", qty: 1, unit: 6600 },
+        { id: 2, name: "Donations", qty: 1, unit: 4700 },
+        { id: 3, name: "New Item", qty: 1, unit: 6e3 }
+      ]
+    },
+    {
+      id: "utilities",
+      label: "Utilities",
+      color: "#2d1e3d",
+      accent: "#a85bd9",
+      items: [
+        { id: 1, name: "Electric", qty: 1, unit: 1e4 },
+        { id: 2, name: "Gas", qty: 1, unit: 3e3 },
+        { id: 3, name: "Exterminator", qty: 1, unit: 500 },
+        { id: 4, name: "Water", qty: 1, unit: 1800 },
+        { id: 5, name: "Club Insurance", qty: 1, unit: 7600 }
       ]
     }
   ];
   const defaultFundraisers = [
-    { id: 1, name: "Eagles Blocks", cost: 10, profit: 300, estSold: 1 },
-    { id: 2, name: "King of Hearts", cost: 0, profit: 3e4, estSold: 1 }
+    { id: 1, name: "Eagles Blocks", cost: 0, profit: 3e3, estSold: 1 },
+    { id: 2, name: "King of Hearts", cost: 0, profit: 3e4, estSold: 1 },
+    { id: 3, name: "Eagles Frenzy", cost: 0, profit: 7500, estSold: 1 },
+    { id: 4, name: "Phillies Front Row Frenzy", cost: 0, profit: 7500, estSold: 1 },
+    { id: 5, name: "Super Bowl", cost: 0, profit: 100, estSold: 1 },
+    { id: 6, name: "50/50 Kazoo Day", cost: 0, profit: 7500, estSold: 1 },
+    { id: 7, name: "NCAA Block", cost: 0, profit: 3500, estSold: 1 },
+    { id: 8, name: "Thanksgiving Block", cost: 0, profit: 2500, estSold: 1 },
+    { id: 9, name: "Christmas Block", cost: 0, profit: 2500, estSold: 1 },
+    { id: 10, name: "Peel Tickets", cost: 0, profit: 5e3, estSold: 1 },
+    { id: 11, name: "Rentals", cost: 0, profit: 11400, estSold: 1 },
+    { id: 12, name: "Small Business", cost: 0, profit: 5e3, estSold: 1 },
+    { id: 13, name: "Kazoo Day", cost: 0, profit: 5e3, estSold: 1 },
+    { id: 14, name: "Slot", cost: 0, profit: 1500, estSold: 1 },
+    { id: 15, name: "Ham Block", cost: 0, profit: 2e3, estSold: 1 },
+    { id: 16, name: "Family Day Phillies Block", cost: 0, profit: 1e3, estSold: 1 },
+    { id: 17, name: "NCAA Brackets", cost: 0, profit: 1e3, estSold: 1 },
+    { id: 18, name: "Giveback", cost: 0, profit: 1e3, estSold: 1 },
+    { id: 19, name: "Kazoo Day Shirts", cost: 0, profit: 2e3, estSold: 1 },
+    { id: 20, name: "Cow Chip", cost: 0, profit: 2e3, estSold: 1 },
+    { id: 21, name: "EOM", cost: 0, profit: 3500, estSold: 1 }
   ];
   const defaultMembers = [
     // Example: { id: 1, tierId: 1, name: "John Smith", ticketsPerMonth: 10, centuries: 15 }
