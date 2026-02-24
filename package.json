@@ -5,10 +5,7 @@
   "main": "membership_model.jsx",
   "scripts": {
     "start": "node server.js",
-    "serve": "node server.js",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "serve": "node server.js"
   },
   "keywords": [
     "react",
@@ -22,12 +19,5 @@
   "dependencies": {
     "dotenv": "^17.3.1",
     "express": "^4.21.2"
-  },
-  "peerDependencies": {
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0"
-  },
-  "devDependencies": {
-    "react-scripts": "^5.0.1"
   }
 }
