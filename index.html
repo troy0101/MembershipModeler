@@ -31,7 +31,7 @@
       if (!window.App) {
         throw new Error('Frontend bundle did not initialize (window.App missing).');
       }
-      ReactDOM.createRoot(rootEl).render(<App />);
+      ReactDOM.createRoot(rootEl).render(React.createElement(window.App));
     } catch (error) {
       showBootError(error?.message || 'Unknown bootstrap error');
     }
